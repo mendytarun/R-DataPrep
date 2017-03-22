@@ -1,5 +1,6 @@
 
 
+
 # replacing blanks with NA while importing data
 
 fin.df <- read.csv("Future-500.csv",na.strings = "")
@@ -54,6 +55,7 @@ str(fin.df)
 fin.df$Growth <- as.numeric(fin.df$Growth)
 fin.df$Revenue <- as.numeric(fin.df$Revenue)
 fin.df$Expenses <- as.numeric(fin.df$Expenses)
+fin.df$Profit <- as.numeric(fin.df$Profit)
 str(fin.df)
 
 
@@ -86,7 +88,122 @@ fin.df[which(fin.df$Revenue==9746272),]
 
 fin.df[is.na(fin.df$Expenses),]
 
+fin.df[is.na(fin.df$State),]
+
+# removing records with missing data
+
+nrow(fin.df)
+
+fin.df_backup <- fin.df
+
+nrow(fin.df[!complete.cases(fin.df),]) # getting rows which have atleast ine column as null
+
+fin.df[!is.na(fin.df$Industry),] # df without Industry NA rows
+
+fin.df <- fin.df[!is.na(fin.df$Industry),]
+
+nrow(fin.df) # 2 rowsremived which have industry NA
+
+# resetting the row index in dataframe...hwn you delete rows... row id doesnot reset..they remain same unlike excel
+
+rownames(fin.df) <- 1:nrow(fin.df) 
+tail(fin.df)
+rownames(fin.df) <- NULL # faster way of resetting the row names
+
+# replacing missing values - Factual Analysis Method
+
+fin.df[!complete.cases(fin.df),]
+fin.df[is.na(fin.df$State) & fin.df$City == "New York","State"] <- "NY"
 
 
 
 
+fin.df[!complete.cases(fin.df),]
+fin.df[is.na(fin.df$State) & fin.df$City == "San Francisco","State"] <- "CA"  
+
+fin.df[c(11,377),]
+
+
+# replacing missing value with median..median imputation
+
+fin.df[!complete.cases(fin.df),]
+nrow(fin.df[!complete.cases(fin.df),])
+
+v.industry <- (fin.df[is.na(fin.df$Employees),])$Industry  # getting industries which have EMployess as NA
+v.industry
+
+
+
+mean(fin.df[,"Employees"],na.rm = T)                              # mean without Industry
+mean(fin.df[fin.df$Industry==v.industry[1],"Employees"],na.rm=T)  # mean with Industry
+
+
+median(fin.df[,"Employees"],na.rm = T)                              # median without industry
+med.emp.retail <- median(fin.df[fin.df$Industry==v.industry[1],"Employees"],na.rm=T)  # median with Induustry
+
+fin.df[is.na(fin.df$Employees) & fin.df$Industry == v.industry[1],"Employees"] <- med.emp.retail
+fin.df[3,]
+
+
+mean(fin.df[fin.df$Industry==v.industry[2],"Employees"],na.rm=T)  # mean with Industry
+med.emp.service <- median(fin.df[fin.df$Industry==v.industry[2],"Employees"],na.rm=T)  # median with Induustry
+med.emp.service
+fin.df[is.na(fin.df$Employees) & fin.df$Industry == v.industry[2],"Employees"] <- med.emp.service
+fin.df[330,]
+
+
+# median imputation in growth
+
+fin.df[!complete.cases(fin.df),]
+
+growth.industry <- (fin.df[is.na(fin.df$Growth),"Industry"])
+growth.industry
+med.growth.service <- median(fin.df[fin.df$Industry==growth.industry[1],"Growth"],na.rm=T)
+
+fin.df[is.na(fin.df$Growth) & fin.df$Industry == growth.industry[1],"Growth"] <- med.growth.service
+
+fin.df[!complete.cases(fin.df),]
+
+
+# median imputation in revenue and expenses
+
+fin.df[is.na(fin.df$Revenue),]
+
+func.median.set <- function(na_column,median_column){
+  
+            median.out <- median(fin.df[fin.df$Industry == na_column,median_column],na.rm=T)
+            return(median.out)         
+  }
+
+median.revenue <- func.median.set( "Construction","Revenue")
+median.expenses <- func.median.set( "Construction","Expenses")
+fin.df[is.na(fin.df$Revenue) & fin.df$Industry == "Construction","Revenue"] <- median.revenue
+fin.df[is.na(fin.df$Expenses) & fin.df$Industry == "Construction","Expenses"] <- median.expenses
+fin.df[!complete.cases(fin.df),]
+
+# calculating missing data - Revenue - Expenses = Profit or Expenses = Revenue - profit
+
+fin.df[is.na(fin.df$Profit),"Profit"] <- fin.df[is.na(fin.df$Profit),"Revenue"] - fin.df[is.na(fin.df$Profit),"Expenses"]
+
+fin.df[!complete.cases(fin.df),]
+
+
+str(fin.df)
+
+# scatter plot classified by industry showing revenue profit expenses
+library(ggplot2)
+p <- ggplot(data=fin.df)
+p + geom_point(aes(x=Revenue,y=Expenses, color = Industry,size=Profit))
+
+# scatter plot that includes industry trends for the expenses~revenue
+# relationship
+
+d <- ggplot(data=fin.df,aes(x=Revenue,y=Expenses,color=Industry))
+  d + geom_point() + geom_smooth(fill=NA,size=1.3)
+
+# box plots showing gwoth by industry
+  
+e <- ggplot(data=fin.df,aes(x=Industry,y=Growth,color=Industry))  
+e + geom_boxplot()  
+  
+e + geom_jitter()+geom_boxplot(size=1, alpha=0.5,outlier.color = NA)
