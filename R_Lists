@@ -1,0 +1,87 @@
+getwd()
+df.machine <- read.csv("Machine-Utilization.csv")
+str(df.machine)
+head(df.machine,10)
+summary(df.machine)
+df.machine$Utlization <- 1-df.machine$Percent.Idle
+
+df.machine$posixtime <- as.POSIXct(df.machine$Timestamp,format="%d/%m/%Y %H:%M")
+
+# rearrange columns in a dataframe
+
+df.machine <- df.machine[,c(5,1,2,3,4)]
+df.machine$Timestamp <- NULL
+
+head(df.machine)
+
+
+RL1 <- df.machine[df.machine$Machine == "RL1",]
+head(RL1)
+str(RL1)
+summary(RL1)
+RL1$Machine <- factor(RL1$Machine)
+
+
+# constructing list
+
+
+
+stats_vector <- c(min(df.machine$Utlization,na.rm = T),
+                  median(df.machine$Utlization,na.rm = T),
+                  max(df.machine$Utlization,na.rm = T)
+                  )
+stats_vector
+
+flag_under90 <- length(which(df.machine$Utlization < .90)) > 0
+
+
+list_rl1 <- list("RL1",stats_vector,flag_under90)
+list_rl1
+
+# naming components of list
+
+names(list_rl1)
+names(list_rl1) <- c("Machine", "Stats", "UND90")
+
+# another way of renaming 
+
+rm(list_rl1)
+list_rl1 <- list(Machine="RL1",Stats = stats_vector,UND90=flag_under90)
+
+# accessing components of list
+# getting max utilization
+
+maxutil <- list_rl1$Stats[3] # $ sign returns object
+list_rl1[1]  # [] returns list
+list_rl1[[2]] # [[]] returns object..same as $
+
+# adding and deleting components of list
+
+
+list_rl1[7] <- "Test Addition"
+list_rl1
+ list_rl1$UnknownHours <- RL1[is.na(RL1$Utlization),"posixtime"]
+ 
+ list_rl1[c(4,6,7)] <- NULL
+ 
+# thing to note is .. in LIST numeration resets automatically but we need to reset the indexes or numeration in dataframe
+ 
+ list_rl1$DataRL1 <- RL1
+list_rl1
+summary(list_rl1)
+
+
+# accessing first date in unknownhour vector of list
+
+firstunknownhour <- list_rl1$UnknownHours[1]
+
+# subsetting a list
+
+sublist <- list_rl1[1:3]
+sublist <- list_rl1[c(1,3,4)]
+sublist <- list_rl1[c("Machine","Stats")]   # single [] are used for subsetting 
+
+
+
+
+
