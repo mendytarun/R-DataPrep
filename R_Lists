@@ -81,7 +81,21 @@ sublist <- list_rl1[1:3]
 sublist <- list_rl1[c(1,3,4)]
 sublist <- list_rl1[c("Machine","Stats")]   # single [] are used for subsetting 
 
+# creating timeseries plot
 
+t <- ggplot(data=df.machine)
+t + geom_line(aes(x=posixtime,y=Utlization,
+                  color=Machine),size=1.2) +
+  facet_grid(Machine~.) +
+  geom_hline(yintercept = 0.9,size=1.2,
+             color="Gray",linetype=3)
 
+myplot <- t + geom_line(aes(x=posixtime,y=Utlization,
+                            color=Machine),size=1.2) +
+  facet_grid(Machine~.) +
+  geom_hline(yintercept = 0.9,size=1.2,
+             color="Gray",linetype=3)
 
-
+list_rl1$Plot <- myplot 
+str(list_rl1)
+summary(list_rl1)
